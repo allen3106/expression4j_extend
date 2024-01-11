@@ -1,43 +1,4 @@
-package com.zlus.expession4j.extend.util;
 
-import cn.hutool.core.convert.Convert;
-import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.core.util.StrUtil;
-import com.zlus.expession4j.extend.constant.MathematicalElementType;
-import com.zlus.expession4j.extend.element.BooleanExpressionElement;
-import com.zlus.expession4j.extend.element.IntegerMathematicalElement;
-import com.zlus.expession4j.extend.element.NullExpressionElement;
-import com.zlus.expession4j.extend.element.NullMathematicalElement;
-import com.zlus.expession4j.extend.function.*;
-import com.zlus.expession4j.extend.operator.*;
-import fr.expression4j.basic.MathematicalElement;
-import fr.expression4j.basic.Operator;
-import fr.expression4j.basic.OperatorManager;
-import fr.expression4j.basic.impl.RealImpl;
-import fr.expression4j.core.Catalog;
-import fr.expression4j.core.Expression;
-import fr.expression4j.core.ExpressionModel;
-import fr.expression4j.core.Parameters;
-import fr.expression4j.core.exception.EvalException;
-import fr.expression4j.core.exception.ParametersException;
-import fr.expression4j.core.exception.ParsingException;
-import fr.expression4j.core.predefine.AbstractFunction;
-import fr.expression4j.factory.*;
-import fr.expression4j.sample.custom.element.OperatorPlusStringReal;
-import fr.expression4j.sample.custom.element.OperatorPlusStringString;
-import fr.expression4j.sample.custom.element.StringExpressionElement;
-import fr.expression4j.sample.custom.element.StringMathematicalElement;
-import fr.expression4j.sample.custom.operator.BooleanMathematicalElement;
-import fr.expression4j.util.ParameterUtil;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Vector;
 
 public class Expression4jUtil {
 
