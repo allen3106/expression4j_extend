@@ -239,6 +239,7 @@ public class Expression4jUtil {
                     return xParameters;
                 }
             });
+
             /**求余函数   求余运算的两个参数必须为整数，这里不进行严格数据格式限定，boolean值也可以进行mod运算，double型转换成int型进行运算*/
             catalog.addExpression(new CommonFunction("mod", false) {
                 @Override
