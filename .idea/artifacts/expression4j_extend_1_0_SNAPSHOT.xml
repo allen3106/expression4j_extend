@@ -1,0 +1,6 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="expression4j_extend-1.0-SNAPSHOT">
+    <output-path>$PROJECT_DIR$/out/artifacts/expression4j_extend_1_0_SNAPSHOT</output-path>
+    <root id="archive" name="expression4j_extend-1.0-SNAPSHOT.jar" />
+  </artifact>
+</component>
