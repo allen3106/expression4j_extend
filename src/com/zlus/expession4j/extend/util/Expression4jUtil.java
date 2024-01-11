@@ -156,8 +156,7 @@ public class Expression4jUtil {
             // define a specific catalog (not necessary,we can use the default catalog instead)
             catalog = ExpressionFactory.getCatalog();
 
-            //自动增加数学函数
-            addMathMethods();
+
             addStringMethods();
 
             // add the user define function to the catalog
@@ -172,6 +171,51 @@ public class Expression4jUtil {
             catalog.addExpression(new AvgFunction());
             catalog.addExpression(new MatchFunction());
             catalog.addExpression(new EqFunction());
+            /**
+             * 四舍五入
+             */
+            catalog.addExpression(new CommonFunction("round", false) {
+                @Override
+                public MathematicalElement evaluate(Parameters parameters) throws EvalException {
+                    try {
+                        MathematicalElement mex = parameters.getParameter("x");
+                        MathematicalElement mey = parameters.getParameter("y");
+                        if (mex instanceof NullMathematicalElement || mey instanceof NullMathematicalElement) {
+                            return new NullMathematicalElement();
+                        }
+                        double value = 0.00;
+                        if (mex.getValue() == null) {
+                            value = 0.00;
+                        } else if (mex instanceof BooleanMathematicalElement) {
+                            value = (Boolean) mex.getValue() ? 1 : 0;
+                        } else if (mex instanceof RealImpl) {
+                            value = mex.getRealValue();
+                        } else if (mex instanceof IntegerMathematicalElement) {
+                            value = (Integer) mex.getValue();
+                        }
+
+                        int scale = (int) mey.getRealValue();
+
+                        double result = Math.round(value * Math.pow(10, scale)) / Math.pow(10, scale);
+
+                        return NumberFactory.createReal(result);
+
+                    } catch (ParametersException e) {
+                        throw new EvalException("Cannot evaluate " + getName() + "(x...). " + e);
+                    }
+                }
+
+                @Override
+                public List getParameters() {
+                    List xParameters = new Vector(2);
+                    xParameters.add("x");
+                    xParameters.add("y");
+                    return xParameters;
+                }
+            });
+
+            //自动增加数学函数
+            addMathMethods();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -199,15 +243,22 @@ public class Expression4jUtil {
 //        Object value = evaluateExpression("null!=null");
 //        Object value = evaluateExpression("5*null");
 //        Object value = evaluateExpression("(1+2)*3-6/5");
-        VarMap varMap = new VarMap();
-        varMap.setValue("aa",null);
-        Object value = evaluateExpression("aa*(1+2)*3-6/5+5e2",varMap);
 //        Object value = evaluateExpression("avg(11,2,5)");
+        VarMap varMap = new VarMap();
+
+        varMap.setValue("aa", 3.123456789);
+//        Object value = evaluateExpression("aa*(1+2)*3-6/5+5e2",varMap);
+//        Object value = evaluateExpression("round(aa)",varMap);
+
+//        Object value = evaluateExpression("round(aa,4)", varMap);
+//        Object value = evaluateExpression("pow(aa,4)", varMap);
+        Object value = evaluateExpression("cos(aa)", varMap);
+
         System.err.println(value);
     }
 
     /**
-     * 解析式中的参数名称从26个小写字母开始使用：
+     * 解析式中的参数名称从26个小写字母开始使用：视为位置参数吧。
      * 如：对于解析式"if(a>=b,'9',2)"，args[0]=2,这个2代表参数a的值，args[1] = 5,这个5代表b的值 生成的函数：f(a,b)=if(a>=b,'9',2)
      * 实际使用中可以首先把a,b的值直接替换的实际值，即"if(2>=5,'9',2)"，对应生成的函数：f()=if(2>=5,'9',2)，用于无参函数的求值
      *
@@ -308,12 +359,7 @@ public class Expression4jUtil {
     private static void addStringMethods() {
 
         Arrays.stream(new String[]{"left", "right", "mid", "substr", "lower", "upper", "len", "trim"}).forEach(s1 -> {
-            ExpressionFactory.getCatalog().addExpression(new AbstractFunction() {
-                @Override
-                public Catalog getCatalog() {
-                    return ExpressionFactory.getCatalog();
-                }
-
+            ExpressionFactory.getCatalog().addExpression(new CommonFunction(s1, true) {
                 @Override
                 public MathematicalElement evaluate(Parameters parameters) throws EvalException {
                     try {
@@ -376,65 +422,55 @@ public class Expression4jUtil {
                     }
                     return null;
                 }
-
-                @Override
-                public MathematicalElement evaluate(OperatorManager operatorManager, Parameters parameters) throws
-                        EvalException {
-                    return evaluate(parameters);
-                }
-
-                @Override
-                public List getParameters() {
-                    return ParameterUtil.generateXParameters();
-                }
-
-                @Override
-                public String getName() {
-                    return s1;
-                }
-
-                @Override
-                public boolean isArrayParameters() {
-                    return true;
-                }
             });
         });
 
     }
 
+    /**
+     * 把Math.class的一些常用方法导入。
+     * atan2
+     * log10
+     * pow
+     * addExact
+     * decrementExact
+     * incrementExact
+     * multiplyExact
+     * negateExact
+     * subtractExact
+     * scalb
+     * copySign
+     * getExponent
+     * signum
+     * IEEEremainder
+     * cbrt
+     * expm1
+     * floorDiv
+     * floorMod
+     * hypot
+     * log1p
+     * nextAfter
+     * nextDown
+     * nextUp
+     * rint
+     * tanh
+     * toDegrees
+     * toIntExact
+     * toRadians
+     * ulp
+     */
     private static void addMathMethods() {
-
-        for (final Method method : Math.class.getMethods()) {
+        Arrays.stream(Math.class.getMethods()).filter(method -> {
             if (!Modifier.isStatic(method.getModifiers())) {
-                continue;
+                return false;
             }
-            // System.err.println(method.getName());
+            if (ExpressionFactory.getCatalog().listExpression().contains(method.getName()))
+                return false;
+            return true;
+        }).forEach(method -> {
+//            System.err.println(method.getName());
             final int parameterCount = method.getParameterCount();
-            ExpressionFactory.getCatalog().addExpression(new AbstractFunction() {
-                @Override
-                public List getParameters() {
-                    Vector<Object> vector = new Vector<>(parameterCount);
-                    for (int i = 0; i < parameterCount; i++) {
-                        vector.add(abc.charAt(i) + "");
-                    }
-                    return vector;
-                }
-
-                @Override
-                public String getName() {
-                    return method.getName();
-                }
-
-                @Override
-                public Catalog getCatalog() {
-                    return ExpressionFactory.getCatalog();
-                }
-
-                @Override
-                public MathematicalElement evaluate(OperatorManager operatorManager, Parameters parameters) throws EvalException {
-                    return evaluate(parameters);
-                }
-
+            ExpressionFactory.getCatalog().addExpression(new CommonFunction(method.getName(), false) {
                 @Override
                 public MathematicalElement evaluate(Parameters parameters) throws EvalException {
                     try {
@@ -454,8 +490,73 @@ public class Expression4jUtil {
                         throw new EvalException("Cannot evaluate " + method.getName() + "(" + getParameters().toString() + "). " + e);
                     }
                 }
+
+                @Override
+                public List getParameters() {
+                    List xParameters = new Vector(parameterCount);
+                    for (int i = 0; i < parameterCount; i++) {
+                        xParameters.add(abc.charAt(i) + "");
+                    }
+                    return xParameters;
+                }
+
             });
-        }
+        });
+
+//        for (final Method method : Math.class.getMethods()) {
+//            if (!Modifier.isStatic(method.getModifiers())) {
+//                continue;
+//            }
+//            if (ExpressionFactory.getCatalog().listExpression().contains(method.getName()))
+//                continue;
+//            // System.err.println(method.getName());
+//            final int parameterCount = method.getParameterCount();
+//            ExpressionFactory.getCatalog().addExpression(new AbstractFunction() {
+//                @Override
+//                public List getParameters() {
+//                    Vector<Object> vector = new Vector<>(parameterCount);
+//                    for (int i = 0; i < parameterCount; i++) {
+//                        vector.add(abc.charAt(i) + "");
+//                    }
+//                    return vector;
+//                }
+//
+//                @Override
+//                public String getName() {
+//                    return method.getName();
+//                }
+//
+//                @Override
+//                public Catalog getCatalog() {
+//                    return ExpressionFactory.getCatalog();
+//                }
+//
+//                @Override
+//                public MathematicalElement evaluate(OperatorManager operatorManager, Parameters parameters) throws EvalException {
+//                    return evaluate(parameters);
+//                }
+//
+//                @Override
+//                public MathematicalElement evaluate(Parameters parameters) throws EvalException {
+//                    try {
+//                        Object[] params = new Object[parameterCount];
+//                        Class<?>[] parameterTypes = method.getParameterTypes();
+//                        for (int i = 0; i < params.length; i++) {
+//                            MathematicalElement parameter = parameters.getParameter(abc.charAt(i) + "");
+//                            Class<?> paramType = parameterTypes[i];
+//                            Object v = Convert.convert(paramType, parameter.getValue());
+//                            params[i] = v;
+//                        }
+//                        Object invoke = method.invoke(null, params);
+//                        Double convert = Convert.convert(double.class, invoke);
+//                        return NumberFactory.createReal(convert);
+//                    } catch (ParametersException | IllegalAccessException | IllegalArgumentException |
+//                             InvocationTargetException e) {
+//                        throw new EvalException("Cannot evaluate " + method.getName() + "(" + getParameters().toString() + "). " + e);
+//                    }
+//                }
+//            });
+//        }
 
     }
 }
