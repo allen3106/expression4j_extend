@@ -325,8 +325,8 @@ public class Expression4jUtil {
 //        Object value = evaluateExpression("round(aa,4)", varMap);
 //        Object value = evaluateExpression("pow(aa,4)", varMap);
 //        Object value = evaluateExpression("sin(aa)", varMap);
-        varMap.setValue("aa", 5);
-        varMap.setValue("bb", null);
+        varMap.setValue("aa", true);
+        varMap.setValue("bb", 2);
 //        Object value = evaluateExpression("mod(aa,bb)", varMap);
         Object value = evaluateExpression("(aa%bb)", varMap);
 
