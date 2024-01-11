@@ -65,6 +65,7 @@ public class Expression4jUtil {
             Operator eq = OperatorFactory.createOperator("eq", "==", false);
             Operator ne = OperatorFactory.createOperator("ne", "!=", false);
             Operator not = OperatorFactory.createOperator("not", "!", true);
+            Operator mod = OperatorFactory.createOperator("mod", "%", false);
 
             // add binary（二进制的，数字的） operator supported by the specific expression model
             //优先级别最低 le,ge 比lt,gt优先级别高,优先级别越高越先匹配
@@ -75,6 +76,7 @@ public class Expression4jUtil {
             expressionModel.addBinaryOperator(eq, 2);
             expressionModel.addBinaryOperator(ne, 2);
             expressionModel.addUnaryOperator(not);
+            expressionModel.addBinaryOperator(mod, 1);
 
             operatorManager = OperatorManagerFactory.getDefaultOperatorManager();
 
@@ -151,6 +153,31 @@ public class Expression4jUtil {
                     return new NullMathematicalElement();
                 }
             });
+            /**求余运算       求余运算的两个参数必须为整数，这里不进行严格数据格式限定，boolean值也可以进行mod运算，double型转换成int型进行运算*/
+            operatorManager.addOperatorImpl(new CommonOperatorImpl("mod", -1, -1) {
+                @Override
+                public MathematicalElement compute(MathematicalElement leftElement, MathematicalElement rightElement) throws EvalException {
+                    /*任何一方为null*/
+                    if (leftElement instanceof NullMathematicalElement || rightElement instanceof NullMathematicalElement)
+                        return new NullMathematicalElement();
+                    int value = 0;
+                    int value2 = 0;
+                    if (leftElement instanceof BooleanMathematicalElement) {
+                        value = (boolean) leftElement.getValue() ? 1 : 0;
+                    } else if (leftElement instanceof IntegerMathematicalElement || leftElement instanceof RealImpl) {
+                        value = (int) leftElement.getRealValue();
+                    }
+                    if (rightElement instanceof BooleanMathematicalElement) {
+                        value2 = (boolean) rightElement.getValue() ? 1 : 0;
+                    } else if (rightElement instanceof IntegerMathematicalElement || rightElement instanceof RealImpl) {
+                        value2 = (int) rightElement.getRealValue();
+                    }
+                    if (value2 != 0)
+                        return new IntegerMathematicalElement(value % value2);
+
+                    throw new EvalException("求余运算符[%]的参数不正确：【var1=" + leftElement.getValue() + ",var2=" + rightElement.getValue() + "】");
+                }
+            });
 
 
             // define a specific catalog (not necessary,we can use the default catalog instead)
@@ -195,11 +222,56 @@ public class Expression4jUtil {
                         }
 
                         int scale = (int) mey.getRealValue();
-
                         double result = Math.round(value * Math.pow(10, scale)) / Math.pow(10, scale);
 
                         return NumberFactory.createReal(result);
 
+                    } catch (ParametersException e) {
+                        throw new EvalException("Cannot evaluate " + getName() + "(x...). " + e);
+                    }
+                }
+
+                @Override
+                public List getParameters() {
+                    List xParameters = new Vector(2);
+                    xParameters.add("x");
+                    xParameters.add("y");
+                    return xParameters;
+                }
+            });
+            /**求余函数   求余运算的两个参数必须为整数，这里不进行严格数据格式限定，boolean值也可以进行mod运算，double型转换成int型进行运算*/
+            catalog.addExpression(new CommonFunction("mod", false) {
+                @Override
+                public MathematicalElement evaluate(Parameters parameters) throws EvalException {
+                    try {
+                        MathematicalElement mex = parameters.getParameter("x");
+                        MathematicalElement mey = parameters.getParameter("y");
+                        if (mex instanceof NullMathematicalElement || mey instanceof NullMathematicalElement) {
+                            return new NullMathematicalElement();
+                        }
+                        int value = 0;
+                        if (mex.getValue() == null) {
+                            value = 0;
+                        } else if (mex instanceof BooleanMathematicalElement) {
+                            value = (Boolean) mex.getValue() ? 1 : 0;
+                        } else if (mex instanceof RealImpl) {
+                            value = (int) mex.getRealValue();
+                        } else if (mex instanceof IntegerMathematicalElement) {
+                            value = (Integer) mex.getValue();
+                        }
+                        int value2 = 0;
+                        if (mey.getValue() == null) {
+                            value2 = 0;
+                        } else if (mey instanceof BooleanMathematicalElement) {
+                            value2 = (Boolean) mey.getValue() ? 1 : 0;
+                        } else if (mey instanceof RealImpl) {
+                            value2 = (int) mey.getRealValue();
+                        } else if (mey instanceof IntegerMathematicalElement) {
+                            value2 = (Integer) mey.getValue();
+                        }
+                        if (value2 != 0)
+                            return new IntegerMathematicalElement(value % value2);
+                        throw new EvalException("求余函数[mod]的参数不正确：【var1=" + mex.getValue() + ",var2=" + mey.getValue() + "】");
                     } catch (ParametersException e) {
                         throw new EvalException("Cannot evaluate " + getName() + "(x...). " + e);
                     }
@@ -246,13 +318,17 @@ public class Expression4jUtil {
 //        Object value = evaluateExpression("avg(11,2,5)");
         VarMap varMap = new VarMap();
 
-        varMap.setValue("aa", 3.123456789);
+//        varMap.setValue("aa", 3.123456789);
 //        Object value = evaluateExpression("aa*(1+2)*3-6/5+5e2",varMap);
 //        Object value = evaluateExpression("round(aa)",varMap);
 
 //        Object value = evaluateExpression("round(aa,4)", varMap);
 //        Object value = evaluateExpression("pow(aa,4)", varMap);
-        Object value = evaluateExpression("cos(aa)", varMap);
+//        Object value = evaluateExpression("sin(aa)", varMap);
+        varMap.setValue("aa", 5);
+        varMap.setValue("bb", null);
+//        Object value = evaluateExpression("mod(aa,bb)", varMap);
+        Object value = evaluateExpression("(aa%bb)", varMap);
 
         System.err.println(value);
     }
