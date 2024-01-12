@@ -23,7 +23,7 @@ import fr.expression4j.core.exception.EvalException;
  * @author j
  */
 
-public class CommonOperatorImpl implements OperatorImpl {
+public abstract  class CommonOperatorImpl implements OperatorImpl {
 
     private String operatorName;
     private int rightOperandeType;

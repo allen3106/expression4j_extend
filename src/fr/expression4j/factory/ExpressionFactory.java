@@ -62,7 +62,7 @@ public final class ExpressionFactory {
 	static {
 		//initialise log4j for the moment
 		//TODO remove in the future to initialize correctly the logger
-		BasicConfigurator.configure();
+//		BasicConfigurator.configure();
 
 		log.debug("Initialize factory");
 		catalogMap = new HashMap(10);

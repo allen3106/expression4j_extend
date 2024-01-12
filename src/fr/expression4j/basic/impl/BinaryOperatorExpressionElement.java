@@ -70,6 +70,11 @@ public class BinaryOperatorExpressionElement implements ExpressionElement {
 		
 		int currentEndPos = parseInfo.getEndPos();
 		log.debug("Current end position: " + currentEndPos);
+		//略过运算符前面的空格
+		while (" ".equals(""+expression.charAt(currentEndPos))){
+			currentEndPos++;
+			log.debug("Ignore Blank And Current end position: " + currentEndPos);
+		}
 		
 		List operators = expressionModel.getBinaryOperators(priorityOperatorLevel);
 		Iterator iter = operators.iterator();
@@ -77,8 +82,14 @@ public class BinaryOperatorExpressionElement implements ExpressionElement {
 			Operator currentOperator = (Operator) iter.next();
 			if (checkOperator(currentOperator,expression,currentEndPos)) {
 				log.debug("Found operator " + currentOperator.getName());
-				
-				parseInfo.setEndPos(currentEndPos + currentOperator.getSymbol().length());
+				int endPos = currentEndPos + currentOperator.getSymbol().length();
+				//略过运算符后面的空格
+				while (" ".equals(""+expression.charAt(endPos))){
+					endPos++;
+					log.debug("Ignore Blank And Current end position: " + endPos);
+				}
+				parseInfo.setEndPos(endPos);
+
 				TreeElement element = new TreeElement(TreeElement.TREE_ELEMENT_TYPE_BINARY_OPERATOR,null,null,null,getName(),currentOperator.getName(),null);
 				parseInfo.setTreeElement(element);
 				return true;

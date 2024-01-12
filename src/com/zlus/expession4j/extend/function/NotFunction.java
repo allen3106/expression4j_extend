@@ -1,5 +1,7 @@
 package com.zlus.expession4j.extend.function;
 
+import com.zlus.expession4j.extend.element.IntegerMathematicalElement;
+import com.zlus.expession4j.extend.element.NullMathematicalElement;
 import fr.expression4j.basic.MathematicalElement;
 import fr.expression4j.basic.OperatorManager;
 import fr.expression4j.basic.impl.RealImpl;
@@ -42,14 +44,16 @@ public class NotFunction extends AbstractFunction {
         try {
             MathematicalElement mex = parameters.getParameter("x");
             boolean[] args = new boolean[1];
-            if (mex == null) {
+            if (mex == null|| mex instanceof NullMathematicalElement) {
                 args[0] = false;
             } else if (mex instanceof BooleanMathematicalElement) {
                 args[0] = (Boolean) mex.getValue();
-            } else if (mex instanceof RealImpl) {
+            } else if (mex instanceof RealImpl|| mex instanceof IntegerMathematicalElement) {
                 args[0] = mex.getRealValue() > 0;
-            } else {
-                args[0] = true;
+            }
+            else {
+//                args[0] = true;
+                throw new ParametersException("不支持这种参数类型：" + mex);
             }
 
             return new BooleanMathematicalElement(not(args[0]));

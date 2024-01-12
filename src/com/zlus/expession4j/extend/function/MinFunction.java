@@ -1,5 +1,7 @@
 package com.zlus.expession4j.extend.function;
 
+import com.zlus.expession4j.extend.element.IntegerMathematicalElement;
+import com.zlus.expession4j.extend.element.NullMathematicalElement;
 import fr.expression4j.basic.MathematicalElement;
 import fr.expression4j.basic.OperatorManager;
 import fr.expression4j.basic.impl.RealImpl;
@@ -48,12 +50,15 @@ public class MinFunction extends AbstractFunction {
                 String key = "var" + index;
                 MathematicalElement mex = parameters.getParameter(key);
 //                System.err.println(key + ":" + mex.getValue());
-                if (mex == null) {
+                if (mex == null|| mex instanceof NullMathematicalElement) {
                     args[index++] = 0;
                 } else if (mex instanceof BooleanMathematicalElement) {
                     args[index++] = (Boolean) mex.getValue() ? 1 : 0;
-                } else if (mex instanceof RealImpl) {
+                } else if (mex instanceof RealImpl|| mex instanceof IntegerMathematicalElement) {
                     args[index++] = mex.getRealValue();
+                }else {
+//                args[0] = true;
+                    throw new ParametersException("不支持这种参数类型：" + mex);
                 }
             }
             return NumberFactory.createReal(min(args));

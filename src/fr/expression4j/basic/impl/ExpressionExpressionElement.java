@@ -53,7 +53,7 @@ public class ExpressionExpressionElement implements ExpressionElement {
 		}
 		
 		int endPos = parseInfo.getEndPos();
-		
+
 		ParseInfo tmpParseInfo = new ParseInfo();
 		tmpParseInfo.setEndPos(endPos);
 		
@@ -61,6 +61,7 @@ public class ExpressionExpressionElement implements ExpressionElement {
 			//found a term
 			//check for the operator
 			int storedEndPos = tmpParseInfo.getEndPos();
+
 			TreeElement storedTreeElement = tmpParseInfo.getTreeElement();
 			ParseInfo operatorParseInfo = new ParseInfo();
 			operatorParseInfo.setEndPos(storedEndPos);

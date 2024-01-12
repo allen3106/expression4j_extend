@@ -4,6 +4,7 @@ import cn.hutool.core.convert.Convert;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.zlus.expession4j.extend.constant.MathematicalElementType;
+import com.zlus.expession4j.extend.constant.MathematicalOperatorPriority;
 import com.zlus.expession4j.extend.element.BooleanExpressionElement;
 import com.zlus.expession4j.extend.element.IntegerMathematicalElement;
 import com.zlus.expession4j.extend.element.NullExpressionElement;
@@ -67,16 +68,22 @@ public class Expression4jUtil {
             Operator not = OperatorFactory.createOperator("not", "!", true);
             Operator mod = OperatorFactory.createOperator("mod", "%", false);
 
+            Operator or = OperatorFactory.createOperator("or", "||", false);
+            Operator and = OperatorFactory.createOperator("and", "&&", false);
+
             // add binary（二进制的，数字的） operator supported by the specific expression model
             //优先级别最低 le,ge 比lt,gt优先级别高,优先级别越高越先匹配
-            expressionModel.addBinaryOperator(gt, 1);
-            expressionModel.addBinaryOperator(ge, 2);
-            expressionModel.addBinaryOperator(lt, 1);
-            expressionModel.addBinaryOperator(le, 2);
-            expressionModel.addBinaryOperator(eq, 2);
-            expressionModel.addBinaryOperator(ne, 2);
+            expressionModel.addBinaryOperator(gt, MathematicalOperatorPriority.RELATION_OPERATOR);
+            expressionModel.addBinaryOperator(ge, MathematicalOperatorPriority.RELATION_OPERATOR);
+            expressionModel.addBinaryOperator(lt, MathematicalOperatorPriority.RELATION_OPERATOR);
+            expressionModel.addBinaryOperator(le, MathematicalOperatorPriority.RELATION_OPERATOR);
+            expressionModel.addBinaryOperator(eq, MathematicalOperatorPriority.RELATION_OPERATOR);
+            expressionModel.addBinaryOperator(ne, MathematicalOperatorPriority.RELATION_OPERATOR);
             expressionModel.addUnaryOperator(not);
-            expressionModel.addBinaryOperator(mod, 1);
+            expressionModel.addBinaryOperator(mod, MathematicalOperatorPriority.MULTIPLE_DIVIDE_OPERATOR);
+
+            expressionModel.addBinaryOperator(or, MathematicalOperatorPriority.LOGICAL_OPERATOR);
+            expressionModel.addBinaryOperator(and, MathematicalOperatorPriority.LOGICAL_OPERATOR);
 
             operatorManager = OperatorManagerFactory.getDefaultOperatorManager();
 
@@ -102,6 +109,69 @@ public class Expression4jUtil {
                 @Override
                 public MathematicalElement compute(MathematicalElement leftElement, MathematicalElement rightElement) throws EvalException {
                     return new BooleanMathematicalElement(!leftElement.getValue().equals(rightElement.getValue()));
+                }
+            });
+
+            //boolean值and运算   and:-1:-1
+            operatorManager.addOperatorImpl(new CommonOperatorImpl("and", -1, -1) {
+                @Override
+                public MathematicalElement compute(MathematicalElement leftElement, MathematicalElement rightElement) throws EvalException {
+                    /*任何一方为null*/
+                    if (leftElement instanceof NullMathematicalElement || rightElement instanceof NullMathematicalElement)
+                        return new BooleanMathematicalElement(false);
+                    boolean value = false;
+                    boolean value2 = false;
+                    if (leftElement instanceof BooleanMathematicalElement) {
+                        value = (boolean) leftElement.getValue();
+                    } else if (leftElement instanceof IntegerMathematicalElement || leftElement instanceof RealImpl) {
+                        value = (int) leftElement.getRealValue() != 0;
+                    } else if (leftElement instanceof StringMathematicalElement) {
+                        value = StrUtil.isNotEmpty((CharSequence) leftElement.getValue());
+                    } else {
+                        throw new EvalException("不支持这种参数类型：" + leftElement);
+                    }
+                    if (rightElement instanceof BooleanMathematicalElement) {
+                        value2 = (boolean) rightElement.getValue();
+                    } else if (rightElement instanceof IntegerMathematicalElement || rightElement instanceof RealImpl) {
+                        value2 = (int) rightElement.getRealValue() != 0;
+                    } else if (rightElement instanceof StringMathematicalElement) {
+                        value2 = StrUtil.isNotEmpty((CharSequence) rightElement.getValue());
+                    } else {
+                        throw new EvalException("不支持这种参数类型：" + rightElement);
+                    }
+                    return new BooleanMathematicalElement(value && value2);
+                }
+            });
+            //boolean值or运算   or:-1:-1
+            operatorManager.addOperatorImpl(new CommonOperatorImpl("or", -1, -1) {
+                @Override
+                public MathematicalElement compute(MathematicalElement leftElement, MathematicalElement rightElement) throws EvalException {
+
+                    boolean value = false;
+                    boolean value2 = false;
+                    if (leftElement instanceof NullMathematicalElement || leftElement.getValue() == null) {
+                        value = false;
+                    } else if (leftElement instanceof BooleanMathematicalElement) {
+                        value = (boolean) leftElement.getValue();
+                    } else if (leftElement instanceof IntegerMathematicalElement || leftElement instanceof RealImpl) {
+                        value = (int) leftElement.getRealValue() != 0;
+                    } else if (leftElement instanceof StringMathematicalElement) {
+                        value = StrUtil.isNotEmpty((CharSequence) leftElement.getValue());
+                    } else {
+                        throw new EvalException("不支持这种参数类型：" + leftElement);
+                    }
+                    if (rightElement instanceof NullMathematicalElement || rightElement.getValue() == null) {
+                        value2 = false;
+                    } else if (rightElement instanceof BooleanMathematicalElement) {
+                        value2 = (boolean) rightElement.getValue();
+                    } else if (rightElement instanceof IntegerMathematicalElement || rightElement instanceof RealImpl) {
+                        value2 = (int) rightElement.getRealValue() != 0;
+                    } else if (rightElement instanceof StringMathematicalElement) {
+                        value2 = StrUtil.isNotEmpty((CharSequence) rightElement.getValue());
+                    } else {
+                        throw new EvalException("不支持这种参数类型：" + rightElement);
+                    }
+                    return new BooleanMathematicalElement(value || value2);
                 }
             });
 
@@ -329,9 +399,15 @@ public class Expression4jUtil {
         varMap.setValue("aa", true);
         varMap.setValue("bb", 2);
 //        Object value = evaluateExpression("mod(aa,bb)", varMap);
-        Object value = evaluateExpression("(aa%bb)", varMap);
+//        Object value = evaluateExpression("(aa%bb)", varMap);
+//
+//        System.err.println(value);
 
-        System.err.println(value);
+//        System.err.println(evaluateExpression("or(1,true,false,true,5!=6)"));
+//        System.err.println(evaluateExpression("and(1,true,false,true,5!=6)"));
+//        System.err.println(evaluateExpression("and(1,true)"));
+//        System.err.println(evaluateExpression("or(1,false)"));
+        System.err.println(evaluateExpression("0 || 5>4 ||  false"));
     }
 
     /**

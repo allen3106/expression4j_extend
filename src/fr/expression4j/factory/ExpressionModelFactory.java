@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import com.zlus.expession4j.extend.constant.MathematicalOperatorPriority;
 import fr.expression4j.basic.impl.ComplexOrRealExpressionElement;
 import fr.expression4j.basic.impl.ConstantOrVariableExpressionElement;
 import fr.expression4j.basic.impl.FunctionExpressionElement;
@@ -48,13 +49,13 @@ public class ExpressionModelFactory {
 			defaultExpressionModel.addUnaryOperator(OperatorFactory.getOperator("UnaryMinus"));
 			defaultExpressionModel.addUnaryOperator(OperatorFactory.getOperator("UnaryPlus"));
 			
-			defaultExpressionModel.addBinaryOperator(OperatorFactory.getOperator("Plus"),1);
-			defaultExpressionModel.addBinaryOperator(OperatorFactory.getOperator("Minus"),1);
+			defaultExpressionModel.addBinaryOperator(OperatorFactory.getOperator("Plus"), MathematicalOperatorPriority.PLUS_MINUS_OPERATOR);
+			defaultExpressionModel.addBinaryOperator(OperatorFactory.getOperator("Minus"),MathematicalOperatorPriority.PLUS_MINUS_OPERATOR);
 	
-			defaultExpressionModel.addBinaryOperator(OperatorFactory.getOperator("Multiply"),2);
-			defaultExpressionModel.addBinaryOperator(OperatorFactory.getOperator("Divide"),2);
+			defaultExpressionModel.addBinaryOperator(OperatorFactory.getOperator("Multiply"),MathematicalOperatorPriority.MULTIPLE_DIVIDE_OPERATOR);
+			defaultExpressionModel.addBinaryOperator(OperatorFactory.getOperator("Divide"),MathematicalOperatorPriority.MULTIPLE_DIVIDE_OPERATOR);
 			
-			defaultExpressionModel.addBinaryOperator(OperatorFactory.getOperator("Pow"),3);
+			defaultExpressionModel.addBinaryOperator(OperatorFactory.getOperator("Pow"),MathematicalOperatorPriority.UNARY_OPERATOR);
 	
 			defaultExpressionModel.addExpressionElement(new ComplexOrRealExpressionElement(),1);
 			defaultExpressionModel.addExpressionElement(new FunctionExpressionElement(),2);

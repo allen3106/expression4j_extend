@@ -14,12 +14,9 @@
 
 package fr.expression4j.core.impl;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
+import cn.hutool.core.collection.CollUtil;
 import fr.expression4j.basic.ExpressionElement;
 import fr.expression4j.basic.Operator;
 import fr.expression4j.core.ExpressionModel;
@@ -153,7 +150,15 @@ public class ExpressionModelImpl implements ExpressionModel {
 	 * @see fr.expression4j.core.ExpressionModel#getBinaryOperators(int)
 	 */
 	public List getBinaryOperators(int priority) {
-		return (List) binaryOperatorMap.get(new Integer(priority));
+		List<Operator> list = (List<Operator>) binaryOperatorMap.get(new Integer(priority));
+		if (CollUtil.isEmpty(list)){
+			return  new ArrayList();
+		}
+		//把长的放在前面
+		list.sort((op1,op2) ->{
+			return  op1.getSymbol().length()-op2.getSymbol().length();
+		});
+		return list;
 	}
 
 	/* (non-Javadoc)
