@@ -14,5 +14,5 @@ Operator mod = OperatorFactory.createOperator("mod", "%", false);
 Operator or = OperatorFactory.createOperator("or", "||", false);
 Operator and = OperatorFactory.createOperator("and", "&&", false);
 
-新增的代码，90%的代码都在Expression4jUtil 里面，对Expression4j原有部分类进行了小修改（如：增加函数的可变参数，运算符与运算数之间空格的处理），随便修改，随便传播。
+新增的代码，90%的代码都在Expression4jUtil 里面，对Expression4j原有部分类进行了小修改（如：增加函数的可变参数，运算符与运算数之间空格的处理），第一次在GitHub上分析代码，有缘人随便修改，随便传播。
 
